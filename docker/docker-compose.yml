@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  :
+    build: .
+    image: 
+    ports:
+      - '8000:8000'
+    volumes:
+      - .:/usr/src/
+    networks:
+      - node-network
+
+networks:
+  node-network:
+    driver: bridge

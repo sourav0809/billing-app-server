@@ -1,0 +1,14 @@
+{
+  "apps": [
+    {
+      "name": "supervidya-staging",
+      "script": "./build/src/index.js",
+      "exec_mode": "cluster",
+      "instances": "1",
+      "env": {
+        "NODE_ENV": "test",
+        "PORT": 8007
+      }
+    }
+  ]
+}
