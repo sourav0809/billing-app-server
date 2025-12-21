@@ -9,6 +9,7 @@ CREATE TABLE "public"."Users" (
     "role" TEXT NOT NULL,
     "parentUserId" TEXT,
     "status" TEXT NOT NULL DEFAULT 'Active',
+    "type" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -102,23 +103,11 @@ CREATE TABLE "public"."UserPlans" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "planId" TEXT NOT NULL,
+    "status" TEXT NOT NULL DEFAULT 'ACTIVE',
     "startDate" TIMESTAMP(3) NOT NULL,
     "endDate" TIMESTAMP(3),
 
     CONSTRAINT "UserPlans_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."UserPlanHistories" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "planId" TEXT,
-    "changeType" TEXT NOT NULL,
-    "oldPlanId" TEXT,
-    "newPlanId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT "UserPlanHistories_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -186,18 +175,6 @@ ALTER TABLE "public"."UserPlans" ADD CONSTRAINT "UserPlans_userId_fkey" FOREIGN 
 
 -- AddForeignKey
 ALTER TABLE "public"."UserPlans" ADD CONSTRAINT "UserPlans_planId_fkey" FOREIGN KEY ("planId") REFERENCES "public"."Plans"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."UserPlanHistories" ADD CONSTRAINT "UserPlanHistories_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."UserPlanHistories" ADD CONSTRAINT "UserPlanHistories_planId_fkey" FOREIGN KEY ("planId") REFERENCES "public"."Plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."UserPlanHistories" ADD CONSTRAINT "UserPlanHistories_oldPlanId_fkey" FOREIGN KEY ("oldPlanId") REFERENCES "public"."Plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."UserPlanHistories" ADD CONSTRAINT "UserPlanHistories_newPlanId_fkey" FOREIGN KEY ("newPlanId") REFERENCES "public"."Plans"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."UserChannels" ADD CONSTRAINT "UserChannels_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."Users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

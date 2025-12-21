@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -24,18 +21,21 @@ model User {
   role         String // ADMIN, DISTRIBUTOR, DEALER, CUSTOMER
   parentUserId String?
   status       String @default("Active")
+  type         String 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  // Self-referencing relationship for hierarchy
+
+  // Self-referencing hierarchy
   parentUser User?  @relation("UserHierarchy", fields: [parentUserId], references: [id])
   childUsers User[] @relation("UserHierarchy")
 
-  // Relations to other tables
-  billingsAsUser       Billing[]            @relation("BillingUser")
-  billingsAsSeller     Billing[]            @relation("BillingSeller")
+  // Billing relations
+  billingsAsUser   Billing[] @relation("BillingUser")
+  billingsAsSeller Billing[] @relation("BillingSeller")
+
+  // User subscription data
   userPlans            UserPlan[]
-  userPlanHistories    UserPlanHistory[]
   userChannels         UserChannel[]
   userChannelHistories UserChannelHistory[]
 
@@ -43,26 +43,25 @@ model User {
 }
 
 //////////////////////////////////////////////////////
-// INVENTORY (For Product Sale — STB, Remote, etc.)
+// INVENTORY (Products like STB, Remote, etc.)
 //////////////////////////////////////////////////////
 
 model InventoryItem {
   id          String   @id @default(uuid())
   name        String
   description String?
-  price       Decimal  @db.Decimal(10, 2)
+  price       Decimal @db.Decimal(10, 2)
   category    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  // Relations
   billingItems BillingItem[]
 
   @@map("InventoryItems")
 }
 
 //////////////////////////////////////////////////////
-// BILLING (Unified Ledger: Product Sales + Monthly Bills)
+// BILLING (Unified Ledger: Monthly + Product Sales)
 //////////////////////////////////////////////////////
 
 model Billing {
@@ -71,13 +70,13 @@ model Billing {
   sellerId    String?
   billingDate DateTime
   billingType String // PRODUCT_SALE, MONTHLY_BILL, ADD_CHANNEL, REMOVE_CHANNEL, PLAN_RENEW
-  totalAmount Decimal  @db.Decimal(10, 2)
-  status      String // PENDING, PAID, FINALIZED
+  totalAmount Decimal @db.Decimal(10, 2)
+  status      String  // PENDING, PAID, FINALIZED
   createdAt   DateTime @default(now())
 
-  // Relations
-  user             User             @relation("BillingUser", fields: [userId], references: [id])
-  seller           User?            @relation("BillingSeller", fields: [sellerId], references: [id])
+  user   User  @relation("BillingUser", fields: [userId], references: [id])
+  seller User? @relation("BillingSeller", fields: [sellerId], references: [id])
+
   billingItems     BillingItem[]
   billingHistories BillingHistory[]
 
@@ -85,10 +84,11 @@ model Billing {
 }
 
 //////////////////////////////////////////////////////
-// BILLING ITEMS (Line Items for Billing)
+// BILLING ITEMS (Line Items inside Billing)
 //////////////////////////////////////////////////////
+
 model BillingItem {
-  id          String  @id @default(uuid())
+  id          String   @id @default(uuid())
   billingId   String
   itemType    String // PRODUCT, PLAN, CHANNEL, TAX, DISCOUNT
   inventoryId String?
@@ -96,9 +96,8 @@ model BillingItem {
   planId      String?
   description String?
   quantity    Int     @default(1)
-  price       Decimal @db.Decimal(10, 2) // locked price
+  price       Decimal @db.Decimal(10, 2)
 
-  // Relations
   billing       Billing        @relation(fields: [billingId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem? @relation(fields: [inventoryId], references: [id])
   channel       Channel?       @relation(fields: [channelId], references: [id])
@@ -108,39 +107,34 @@ model BillingItem {
 }
 
 //////////////////////////////////////////////////////
-// BILLING HISTORY (Frozen Invoice Snapshot)
+// BILLING HISTORY (Frozen Invoice Snapshots)
 //////////////////////////////////////////////////////
 
 model BillingHistory {
-  id           String   @id @default(uuid())
-  billingId    String
-  metadata     Json
-  createdAt    DateTime @default(now())
+  id        String   @id @default(uuid())
+  billingId String
+  metadata  Json
+  createdAt DateTime @default(now())
 
-  // Relations
   billing Billing @relation(fields: [billingId], references: [id], onDelete: Cascade)
 
   @@map("BillingHistories")
 }
 
 //////////////////////////////////////////////////////
-// PLANS & DEFAULT CHANNELS (Templates)
+// PLANS (Templates)
 //////////////////////////////////////////////////////
 
 model Plan {
   id        String   @id @default(uuid())
   name      String
   type      String @default("DPO")
-  price     Decimal  @db.Decimal(10, 2)
+  price     Decimal @db.Decimal(10, 2)
   createdAt DateTime @default(now())
 
-  // Relations
-  planChannels               PlanChannel[]
-  userPlans                  UserPlan[]
-  userPlanHistoriesAsPlan    UserPlanHistory[] @relation("UserPlanHistoryPlan")
-  userPlanHistoriesAsOldPlan UserPlanHistory[] @relation("UserPlanHistoryOldPlan")
-  userPlanHistoriesAsNewPlan UserPlanHistory[] @relation("UserPlanHistoryNewPlan")
-  billingItems               BillingItem[]
+  planChannels PlanChannel[]
+  userPlans    UserPlan[]
+  billingItems BillingItem[]
 
   @@map("Plans")
 }
@@ -148,10 +142,9 @@ model Plan {
 model Channel {
   id        String   @id @default(uuid())
   name      String
-  price     Decimal  @db.Decimal(10, 2)
+  price     Decimal @db.Decimal(10, 2)
   createdAt DateTime @default(now())
 
-  // Relations
   planChannels         PlanChannel[]
   userChannels         UserChannel[]
   userChannelHistories UserChannelHistory[]
@@ -165,7 +158,6 @@ model PlanChannel {
   planId    String
   channelId String
 
-  // Relations
   plan    Plan    @relation(fields: [planId], references: [id], onDelete: Cascade)
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
@@ -174,17 +166,17 @@ model PlanChannel {
 }
 
 //////////////////////////////////////////////////////
-// USER PLAN ASSIGNMENT
+// USER PLAN (Multiple allowed, no history table)
 //////////////////////////////////////////////////////
 
 model UserPlan {
-  id        String    @id @default(uuid())
+  id        String   @id @default(uuid())
   userId    String
   planId    String
+  status    String @default("ACTIVE") // ACTIVE, INACTIVE, CANCELLED
   startDate DateTime
   endDate   DateTime?
 
-  // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
@@ -192,38 +184,17 @@ model UserPlan {
 }
 
 //////////////////////////////////////////////////////
-// USER PLAN HISTORY (Every plan change)
+// USER CHANNELS (Current Snapshot)
 //////////////////////////////////////////////////////
-model UserPlanHistory {
-  id         String   @id @default(uuid())
-  userId     String
-  planId     String?
-  changeType String // ASSIGNED, CHANGED, REMOVED
-  oldPlanId  String?
-  newPlanId  String?
-  createdAt  DateTime @default(now())
 
-  // Relations
-  user    User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan    Plan? @relation("UserPlanHistoryPlan", fields: [planId], references: [id])
-  oldPlan Plan? @relation("UserPlanHistoryOldPlan", fields: [oldPlanId], references: [id])
-  newPlan Plan? @relation("UserPlanHistoryNewPlan", fields: [newPlanId], references: [id])
-
-  @@map("UserPlanHistories")
-}
-
-//////////////////////////////////////////////////////
-// USER CHANNEL SNAPSHOT (CURRENT — Final Channels)
-//////////////////////////////////////////////////////
 model UserChannel {
   id        String   @id @default(uuid())
   userId    String
   channelId String
-  price     Decimal  @db.Decimal(10, 2) // locked price currently
+  price     Decimal @db.Decimal(10, 2)
   addedFrom String // PLAN, MANUAL, PROMO
   createdAt DateTime @default(now())
 
-  // Relations
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
@@ -231,17 +202,17 @@ model UserChannel {
 }
 
 //////////////////////////////////////////////////////
-// USER CHANNEL HISTORY (DAILY SNAPSHOTS)
+// USER CHANNEL HISTORY (Daily Snapshot)
 //////////////////////////////////////////////////////
-model UserChannelHistory {
-  id           String   @id @default(uuid())
-  userId       String
-  channelId    String
-  price        Decimal  @db.Decimal(10, 2) // locked daily price
-  metadata     Json
-  createdAt    DateTime @default(now())
 
-  // Relations
+model UserChannelHistory {
+  id        String   @id @default(uuid())
+  userId    String
+  channelId String
+  price     Decimal @db.Decimal(10, 2)
+  metadata  Json
+  createdAt DateTime @default(now())
+
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   channel Channel @relation(fields: [channelId], references: [id], onDelete: Cascade)
 
