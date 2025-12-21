@@ -5,6 +5,20 @@ export async function up(knex: Knex): Promise<void> {
     table.uuid("id").primary().defaultTo(knex.fn.uuid());
     table.string("email").unique().notNullable();
     table.string("password").notNullable();
+    table.string("phone_number");
+    table.string("name");
+
+    table
+      .enum("role", ["distributor", "dealer", "customer"])
+      .defaultTo("customer");
+
+    table
+      .uuid("parent_id")
+      .nullable()
+      .references("id")
+      .inTable("users")
+      .onDelete("SET NULL");
+
     table.timestamps(true, true);
   });
 }
