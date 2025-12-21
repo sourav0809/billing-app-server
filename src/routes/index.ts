@@ -1,8 +1,12 @@
-import express from 'express';
+import { Express } from "express";
+import { errorHandler } from "./errorHandler";
+import { healthCheck } from "./healthCheck";
+import { routeNotFound } from "./routeNotFound";
+import v1Router from "./v1";
 
-import AuthRoutes from './auth.route';
-const router = express.Router();
-
-router.use('/auth', AuthRoutes);
-
-export default router;
+export const setupRoutes = (app: Express) => {
+  app.use("/v1", v1Router);
+  app.get("/health", healthCheck);
+  app.use(routeNotFound);
+  app.use(errorHandler);
+};

@@ -1,0 +1,36 @@
+services:
+  server:
+    container_name: billing-server
+    build:
+      context: "."
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
+        - PORT=$PORT
+    env_file:
+      - .env
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "$PORT:$PORT"
+    networks:
+      - billing-network
+    depends_on:
+      - postgres
+
+  postgres:
+    container_name: billing-postgres
+    image: postgres:16.6
+    env_file:
+      - .env
+    ports:
+      - 5432:5432
+    networks:
+      - billing-network
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
+
+networks:
+  billing-network:
+    driver: bridge

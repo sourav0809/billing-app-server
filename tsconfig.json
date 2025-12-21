@@ -1,22 +1,19 @@
 {
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "strict": true,
+    "target": "ES2020",
+    "module": "CommonJS",
+    "rootDir": "./",
+    "outDir": "dist",
     "esModuleInterop": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "outDir": "./build",
-    "rootDir": ".",
-    "lib": ["esnext"],
-    "types": ["node", "express"],
-    "baseUrl": ".",
+    "strict": true,
+    "skipLibCheck": true,
+    "allowJs": true,
+
+    /* Aliases */
+    "baseUrl": "./src",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["*"]
     }
-  },
-  "include": ["src", "src/types/**/*.d.ts", "prisma"],
-  "exclude": ["node_modules", "build"]
+  }
 }
