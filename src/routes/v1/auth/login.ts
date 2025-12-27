@@ -26,5 +26,10 @@ export const login = async (
     email: user.email,
   });
 
-  return res.success({ accessToken }, "Login successful");
+  const userData = {
+    token: accessToken,
+    user,
+  };
+
+  return res.success(userData, "Login successful");
 };

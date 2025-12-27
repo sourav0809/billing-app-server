@@ -1,5 +1,9 @@
 import type { Knex } from "knex";
 import { knexSnakeCaseMappers } from "objection";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 export const knexConfig: { [key: string]: Knex.Config } = {
   development: {
