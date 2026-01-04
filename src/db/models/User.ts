@@ -110,12 +110,17 @@ export class User extends Model {
   // -----------------------------
 
   /**
-   *
+   * Create a user.
    * @param data - The data to create the user with.
+   * @param trx - Optional transaction object.
    * @returns The created user.
    */
-  static async createUser(data: Partial<User>) {
-    return this.query().insert(data).returning("*");
+  static async createUser(data: Partial<User>, trx?: any) {
+    const query = this.query();
+    if (trx) {
+      query.transacting(trx);
+    }
+    return query.insert(data).returning("*");
   }
 
   /**
