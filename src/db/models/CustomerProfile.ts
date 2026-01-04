@@ -64,4 +64,22 @@ export class CustomerProfile extends Model {
     json = super.$formatJson(json);
     return json;
   }
+
+  // -----------------------------
+  // Query helpers
+  // -----------------------------
+
+  /**
+   * Create a customer profile.
+   * @param data - The data to create the customer profile with.
+   * @param trx - Optional transaction object.
+   * @returns The created customer profile.
+   */
+  static async createCustomerProfile(data: Partial<CustomerProfile>, trx?: any) {
+    const query = this.query();
+    if (trx) {
+      query.transacting(trx);
+    }
+    return query.insert(data).returning("*");
+  }
 }
