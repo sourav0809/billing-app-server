@@ -109,15 +109,42 @@ export class User extends Model {
   // Query helpers
   // -----------------------------
 
+  /**
+   *
+   * @param data - The data to create the user with.
+   * @returns The created user.
+   */
   static async createUser(data: Partial<User>) {
     return this.query().insert(data).returning("*");
   }
 
+  /**
+   * Get a user by their ID.
+   * @param id - The ID of the user to get.
+   * @returns The user with their associated profile (customer, dealer, or distributor).
+   */
   static async getUserById(id: string) {
-    return this.query().findById(id).whereNull("deleted_at").throwIfNotFound();
+    return this.query()
+      .findById(id)
+      .whereNull("deleted_at")
+      .withGraphFetched(
+        "[customer_profile, dealer_profile, distributor_profile]"
+      )
+      .throwIfNotFound();
   }
 
+  /**
+   * Get a user by their email.
+   * @param email - The email of the user to get.
+   * @returns The user.
+   */
   static async getUserByEmail(email: string) {
-    return this.query().where("email", email).whereNull("deleted_at").first();
+    return this.query()
+      .where("email", email)
+      .whereNull("deleted_at")
+      .withGraphFetched(
+        "[customer_profile, dealer_profile, distributor_profile]"
+      )
+      .first();
   }
 }
