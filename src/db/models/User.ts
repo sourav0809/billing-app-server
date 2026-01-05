@@ -152,4 +152,51 @@ export class User extends Model {
       )
       .first();
   }
+
+  /**
+   * Get paginated customers with their profiles.
+   * @param options - Pagination and filter options.
+   * @param options.page - Page number (default: 1).
+   * @param options.limit - Items per page (default: 10).
+   * @param options.parent_user_id - Optional parent user ID to filter by.
+   * @param options.name - Optional name filter (case-insensitive partial match).
+   * @returns Paginated customers with metadata.
+   */
+  static async getCustomers(options: {
+    page?: number;
+    limit?: number;
+    parent_user_id?: string | null;
+    name?: string;
+  }) {
+    const { page = 1, limit = 10, parent_user_id, name } = options;
+
+    const query = this.query()
+      .where("role", "customer")
+      .whereNull("deleted_at")
+      .modify((q) => {
+        if (parent_user_id !== undefined) {
+          q.where("parent_user_id", parent_user_id);
+        }
+
+        if (name) {
+          q.whereILike("name", `%${name}%`);
+        }
+      })
+      .withGraphFetched("customer_profile.area")
+      .orderBy("created_at", "desc");
+
+    const result = await query.page(page - 1, limit);
+
+    return {
+      data: result.results,
+      pagination: {
+        page,
+        limit,
+        total: result.total,
+        totalPages: Math.ceil(result.total / limit),
+        hasNextPage: page * limit < result.total,
+        hasPreviousPage: page > 1,
+      },
+    };
+  }
 }

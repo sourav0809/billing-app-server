@@ -47,4 +47,33 @@ export class Area extends Model {
     json = super.$formatJson(json);
     return json;
   }
+
+  // -----------------------------
+  // Query helpers
+  // -----------------------------
+
+  /**
+   * Create an area.
+   * @param data - The data to create the area with.
+   * @param trx - Optional transaction object.
+   * @returns The created area.
+   */
+  static async createArea(data: Partial<Area>, trx?: any) {
+    const query = this.query();
+    if (trx) {
+      query.transacting(trx);
+    }
+    return query.insert(data).returning("*");
+  }
+
+  /**
+   * Get all areas (excluding deleted ones).
+   * @returns All active areas.
+   */
+  static async getAreas() {
+    return this.query()
+      .whereNull("deleted_at")
+      .withGraphFetched("user")
+      .orderBy("created_at", "desc");
+  }
 }
