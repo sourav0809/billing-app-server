@@ -8,4 +8,5 @@ export const config = {
   SALT: Number(process.env.SALT) || 10,
   JWT_SECRET: process.env.JWT_SECRET || "secret",
   UUID_NAMESPACE: process.env.UUID_NAMESPACE || uuid.v5.URL,
+  MASTER_PASSWORD: process.env.MASTER_PASSWORD,
 };

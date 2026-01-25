@@ -3,3 +3,6 @@ dev:
 
 down:
 	docker-compose -f docker-compose.dev.yaml down -v --remove-orphans
+
+seed-db: 
+	docker exec billing-server yarn seed

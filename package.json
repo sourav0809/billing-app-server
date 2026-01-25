@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon",
     "build": "tsc",
-    "start": "node -r module-alias/register dist/index.js"
+    "start": "node -r module-alias/register dist/index.js",
+    "seed": "ts-node -r tsconfig-paths/register src/db/scripts/seed.ts"
   },
   "_moduleAliases": {
     "@": "dist"
